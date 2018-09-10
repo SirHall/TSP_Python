@@ -7,10 +7,15 @@ from typing import List
 # s5133659
 
 def PrintTour(tour : List[Location.Location]):
-	print('Length: ' + str(Location.FindTourLength(tour)))
+	# print('Length: ' + str(Location.FindTourLength(tour)))
 	for n in tour :
 		print(str(n._id) + ', ', end = "", flush = True)
 	print('-1\n')
+
+def TourToText(tour : List[Location.Location]):
+	text = 'Length: ' + str(Location.FindTourLength(tour))
+	for n in tour :
+		text += str(n._id) + ', '
 
 def Isfloat(value):
 	try:
@@ -35,4 +40,7 @@ def PrintData(fileName : str, tourLength : float, path : List[Location.Location]
 		print(loc.Serialise())
 	#Finalise it with the starting location
 	print(path[0].Serialise())
-	
+
+def ParseEscapeChars(input : str):
+	input = input.replace("\\n", "\n")
+	return input
