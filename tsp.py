@@ -9,10 +9,6 @@ import time
 import math
 
 # print("Add -sp to input to enable 'special-print'")
-glob.specialPrint = sys.argv.__contains__('-sp')
-if glob.specialPrint:
-	sys.argv.remove('-sp')
-
 # locations = [] #List of all locations
 # path = [] #The generated path
 

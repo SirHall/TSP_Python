@@ -19,7 +19,7 @@ cursor.execute(
 	'CREATE TABLE IF NOT EXISTS ' \
 	'Solutions(' \
 	'solutionID INTEGER PRIMARY KEY AUTOINCREMENT,' \
-	'solutionToID TEXT' \
+	'solutionToID TEXT,' \
 	'solution TEXT,' \
 	'length REAL,' \
 	'FOREIGN KEY(solutionToID) REFERENCES Problems(probName)'
@@ -42,23 +42,34 @@ def AddProblem(problemPath : str, problemName : str):
 	f.close()
 	connection.commit()
 
-def RetrieveProblemInfo(problemName : str):
+def GetProblem(problemName : str):
 	problemName = f"'{problemName}'" #Surround with '
 	cursor.execute(
 		f"SELECT problem FROM Problems WHERE probName={problemName}"
 	)
 	return Funcs.ParseEscapeChars((str(cursor.fetchone())[:-3][3:]))
 
-def SetSolution(problemName : str, solutionText : str, length : float):
-	#Get shortest solution for this problemName. If this is shorter, replace it
+def AddSolution(problemName : str, solutionText : str, length : float):
 	cursor.execute(
-		"INSERT INTO Solutions(solutionToID, solution) VALUES (?, ?)", \
-		(problemName, solutionText) \
+		"INSERT INTO Solutions(solutionToID, solution, length) VALUES (?, ?, ?)", \
+		(problemName, solutionText, length) \
 	)
+	connection.commit()
 
 def GetSolution(problemName : str):
-	#Get solution stored for this path
-	pass
+	#Get shortest solution stored for this path
+	problemName = f"'{problemName}'" #Surround with '
+	# cursor.execute(
+	# 	f"SELECT problem FROM Problems WHERE probName={problemName}"
+	# )
+	cursor.execute(
+		"SELECT a.solution " \
+		"FROM Solutions a " \
+		"LEFT OUTER JOIN Solutions b " \
+    	"	ON a.solutionToID = b.solutionToID AND a.length < b.length " \
+		"WHERE b.solutionToID IS NULL" \
+	)
+	return Funcs.ParseEscapeChars((str(cursor.fetchone())[2:-3]))
 
 #Old
 def CreateTable(tableName : str, *parameters : str):

@@ -13,9 +13,11 @@ def PrintTour(tour : List[Location.Location]):
 	print('-1\n')
 
 def TourToText(tour : List[Location.Location]):
-	text = 'Length: ' + str(Location.FindTourLength(tour))
+	text = 'Length: ' + str(Location.FindTourLength(tour)) + '\n'
 	for n in tour :
-		text += str(n._id) + ', '
+		text += f"{n._id}\t{n._xpos}\t{n._ypos}\n"
+	text += f"-1\t{tour[0]._xpos}\t{tour[0]._ypos}\n" #Add first 
+	return text
 
 def Isfloat(value):
 	try:
@@ -43,4 +45,5 @@ def PrintData(fileName : str, tourLength : float, path : List[Location.Location]
 
 def ParseEscapeChars(input : str):
 	input = input.replace("\\n", "\n")
+	input = input.replace("\\t", "\t")
 	return input
