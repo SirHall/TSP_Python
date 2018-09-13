@@ -7,24 +7,9 @@ connection = sqlite3.connect(dbPath)
 cursor = connection.cursor()
 cursor.execute("PRAGMA foreign_keys = True") #Enable foreign keys for relational databases
 
-#Yes, I know it's bad practise to use 'AUTOINCREMENT', it just makes implementation simpler for such a simple project
-cursor.execute(
-	'CREATE TABLE IF NOT EXISTS ' \
-	'Problems(' \
-	'probName TEXT PRIMARY KEY,' \
-	'problem TEXT' \
-	')')
-
-cursor.execute(
-	'CREATE TABLE IF NOT EXISTS ' \
-	'Solutions(' \
-	'solutionID INTEGER PRIMARY KEY AUTOINCREMENT,' \
-	'solutionToID TEXT,' \
-	'solution TEXT,' \
-	'length REAL,' \
-	'FOREIGN KEY(solutionToID) REFERENCES Problems(probName)'
-	')')
-
+qry = open('DBConstructor.sql', 'r')
+cursor.execute(qry.read())
+qry.close()
 
 # CreateTable(
 # 	'Problems', 
@@ -34,13 +19,17 @@ cursor.execute(
 # 	)
 
 def AddProblem(problemPath : str, problemName : str):
-	f = open(problemPath)
-	cursor.execute(
-		"INSERT INTO Problems(probName, problem) VALUES (?, ?)", \
-		(problemName, f.read()) \
-	)
-	f.close()
-	connection.commit()
+	try:
+		f = open(problemPath)
+		cursor.execute(
+			"INSERT INTO Problems(probName, problem) VALUES (?, ?)", \
+			(problemName, f.read()) \
+		)
+		f.close()
+		connection.commit()
+		return 'FILE ADDED SUCCESFULLY'
+	except IOError:
+		return 'FILE DOES NOT EXIST'
 
 def GetProblem(problemName : str):
 	problemName = f"'{problemName}'" #Surround with '
@@ -103,6 +92,26 @@ def InsertData(tableName : str, *values : str):
 	print(f'INSERT INTO {tableName}({inputNames}) VALUES ({inputValues})')
 	cursor.execute(f'INSERT INTO {tableName}({inputNames}) VALUES ({inputValues})') #Prone to SQL injection attacks
 	connection.commit()
+
+def DoesProblemExist(problemName : str):
+	problemName = f"'{problemName}'"
+	cursor.execute(
+		"SELECT COUNT(1) " \
+		"FROM Problems " \
+		f"WHERE probName = {problemName} " \
+	)
+	return int(str(cursor.fetchone())[1:-2])
+
+def DoesSolutionExist(problemName : str):
+	#Disgusting boilerplate
+	problemName = f"'{problemName}'"
+	cursor.execute(
+		"SELECT COUNT(1) " \
+		"FROM Solutions " \
+		f"WHERE solutionToID = {problemName} " \
+	)
+	return int(str(cursor.fetchone())[1:-2])
+	
 
 def CloseDataBase():
 	cursor.close()
