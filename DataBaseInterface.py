@@ -1,30 +1,52 @@
-import sqlite3
+# import sqlite3
 import os
 import Funcs
+import Location
+import tsp
+import pymysql 
 
-dbPath = 'tspDataBase.db' #Disgusting hardcoded values
-connection = sqlite3.connect(dbPath)
+# dbPath = 'tspDataBase.db' 
+#mysql --user="s5133659" --password="FMLmxF5Y" --host="mysql.ict.griffith.edu.au" --database="s5133659db" --execute="SHOW TABLES"
+connection = pymysql.connect(
+	host = 'mysql.ict.griffith.edu.au',
+	user = 's5133659',
+	password = 'FMLmxF5Y',
+	db = 's5133659db'
+	) #Disgusting hardcoded values
 cursor = connection.cursor()
-cursor.execute("PRAGMA foreign_keys = True") #Enable foreign keys for relational databases
 
-qry = open('DBConstructor.sql', 'r')
-cursor.execute(qry.read())
-qry.close()
+# print(
+# 	cursor.execute(
+# 		"""SELECT * FROM Solution"""
+# ))
 
-# CreateTable(
-# 	'Problems', 
-# 	'probID', 'int'
-# 	'problem', 'file',
+# except expression as identifier:
+# 	pass
+# else:
+	# pass)
 
-# 	)
+# cursor.execute("PRAGMA foreign_keys = True") #Enable foreign keys for relational databases
+
+# qry = open('DBConstructor.sql', 'r')
+# cursor.execute(qry.read())
+# qry.close()
 
 def AddProblem(problemPath : str, problemName : str):
 	try:
 		f = open(problemPath)
-		cursor.execute(
-			"INSERT INTO Problems(probName, problem) VALUES (?, ?)", \
-			(problemName, f.read()) \
-		)
+
+		locations = tsp.Parse(f.read())
+		
+		for location in locations:
+			cursor.execute(
+				"""INSERT INTO Cities(Name, ID, x, y) VALUES (?, ?, ?, ?)""",
+				(problemName, location._id, location._x, location._y)
+			)
+
+		# cursor.execute(
+		# 	"INSERT INTO Problems(probName, problem) VALUES (?, ?)", \
+		# 	(problemName, f.read()) \
+		# )
 		f.close()
 		connection.commit()
 		return 'FILE ADDED SUCCESFULLY'
@@ -60,45 +82,12 @@ def GetSolution(problemName : str):
 	)
 	return Funcs.ParseEscapeChars((str(cursor.fetchone())[2:-3]))
 
-#Old
-def CreateTable(tableName : str, *parameters : str):
-	# cursor.execute('CREATE TABLE IF NOT EXISTS {tableName}({parameters})')
-	#Create a new table with the parameters passed
-	input = ''
-	isParName = True #Are we looking at the parameter type, or name?
-	for word in parameters:
-		input += word if isParName else ParseType(word) #Add the word to 'input'
-		input += ' ' if isParName else ', ' #If we are on a type, add a comma 
-		isParName = not isParName #Flip between parameter names, and types
-	input = input[:-2]
-	print(f'CREATE TABLE IF NOT EXISTS {tableName}({input})')
-	cursor.execute(f'CREATE TABLE IF NOT EXISTS {tableName}({input})')
-
-def InsertData(tableName : str, *values : str):
-	inputNames = '' #Stores all parameter names
-	inputValues = '' #Stores all values given each parameter name
-	isColName = True #Are we looking at the column name, or value?
-	for word in values:
-		if isColName:
-			inputNames += word + ', '
-		else:
-			inputValues += word + ', '
-		isColName = not isColName
-	
-	#Remove trailing ', '
-	inputNames = inputNames[:-2]
-	inputValues = inputValues[:-2]
-
-	print(f'INSERT INTO {tableName}({inputNames}) VALUES ({inputValues})')
-	cursor.execute(f'INSERT INTO {tableName}({inputNames}) VALUES ({inputValues})') #Prone to SQL injection attacks
-	connection.commit()
-
 def DoesProblemExist(problemName : str):
 	problemName = f"'{problemName}'"
 	cursor.execute(
 		"SELECT COUNT(1) " \
-		"FROM Problems " \
-		f"WHERE probName = {problemName} " \
+		"FROM Problem " \
+		f"WHERE Name = {problemName} " \
 	)
 	return int(str(cursor.fetchone())[1:-2])
 
@@ -107,22 +96,7 @@ def DoesSolutionExist(problemName : str):
 	problemName = f"'{problemName}'"
 	cursor.execute(
 		"SELECT COUNT(1) " \
-		"FROM Solutions " \
-		f"WHERE solutionToID = {problemName} " \
+		"FROM Solution " \
+		f"WHERE ProblemName = {problemName} " \
 	)
 	return int(str(cursor.fetchone())[1:-2])
-	
-
-def CloseDataBase():
-	cursor.close()
-	connection.close()
-
-def ParseType(valType : str):
-	#Python doesn't have a switch-case statement...
-	if valType.lower() == 'str': return 'TEXT'
-	if valType.lower() == 'string': return 'TEXT'
-	if valType.lower() == 'float': return 'REAL'
-	if valType.lower() == 'int': return 'INT'
-	if valType.lower() == 'bool': return 'BOOLEAN'
-	if valType.lower() == 'file': return 'BLOB'
-	return valType
