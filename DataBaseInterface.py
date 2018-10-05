@@ -27,9 +27,12 @@ cursor = connection.cursor()
 
 # cursor.execute("PRAGMA foreign_keys = True") #Enable foreign keys for relational databases
 
-# qry = open('DBConstructor.sql', 'r')
-# cursor.execute(qry.read())
-# qry.close()
+qry = open('schema.sql', 'r')
+cursor.execute(qry.read())
+qry.close()
+
+cursor.execute("SHOW TABLES")
+print(cursor.fetchall())
 
 def AddProblem(problemPath : str, problemName : str):
 	try:
