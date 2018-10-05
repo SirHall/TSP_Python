@@ -11,12 +11,14 @@ if glob.specialPrint:
 
 problemName = sys.argv[1]
 
-if sys.argv[2] == 'ADD': #> python3 TSP_db.py problemName ADD problemDir.tsp
+DataBaseInterface.GetProblemInfo(sys.argv[1])
+
+if len(sys.argv) >= 4 and sys.argv[2] == 'ADD': #> python3 TSP_db.py problemName ADD problemDir.tsp
 	if not DataBaseInterface.DoesProblemExist(problemName): 
 		print(DataBaseInterface.AddProblem(sys.argv[3], problemName))
 	else:
 		print("PROBLEM ALREADY EXISTS")
-elif sys.argv[2] == 'SOLVE': #> python TSP_db.py problemName SOLVE maxSolveTime
+elif len(sys.argv) >= 4 and sys.argv[2] == 'SOLVE': #> python TSP_db.py problemName SOLVE maxSolveTime
 	if DataBaseInterface.DoesProblemExist(problemName):
 		solution = tsp.SolveProblem(
 			DataBaseInterface.GetProblem(problemName), \
@@ -31,14 +33,17 @@ elif sys.argv[2] == 'SOLVE': #> python TSP_db.py problemName SOLVE maxSolveTime
 	else:
 		print(f"Problem '{problemName}' does not exist")
 	# print(DataBaseInterface.RetrieveProblemInfo(sys.argv[1]))
-elif sys.argv[2] == 'FETCH': #> python TSP_db.py problemName FETCH
+elif len(sys.argv) >= 3 and sys.argv[2] == 'FETCH': #> python TSP_db.py problemName FETCH
 	if DataBaseInterface.DoesSolutionExist(problemName):
 		print(DataBaseInterface.GetSolution(problemName))
 	else:
 		print(f"Solution for problem '{problemName}' does not yet exist")
-elif sys.argv[2] == 'PROBLEMEXISTS':
+elif len(sys.argv) >= 3 and sys.argv[2] == 'PROBLEMEXISTS':
 	print('TRUE' if DataBaseInterface.DoesProblemExist(problemName) else 'FALSE')	
-elif sys.argv[2] == 'SOLEXISTS':
+elif len(sys.argv) >= 3 and sys.argv[2] == 'SOLEXISTS':
 	print(f"{DataBaseInterface.DoesSolutionExist(problemName)} Solutions")
-else:
+elif len(sys.argv) >= 3:
 	print(f"INVALID ARGUMENT : {sys.argv[2]}") #Invalid argument
+
+DataBaseInterface.cursor.close();
+DataBaseInterface.connection.close();

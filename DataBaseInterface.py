@@ -13,7 +13,9 @@ connection = pymysql.connect(
 	password = 'FMLmxF5Y',
 	db = 's5133659db'
 	) #Disgusting hardcoded values
-cursor = connection.cursor()
+
+#Query results will be returned as a dictionary
+cursor = connection.cursor(pymysql.cursors.DictCursor) 
 
 # print(
 # 	cursor.execute(
@@ -27,12 +29,9 @@ cursor = connection.cursor()
 
 # cursor.execute("PRAGMA foreign_keys = True") #Enable foreign keys for relational databases
 
-qry = open('schema.sql', 'r')
-cursor.execute(qry.read())
-qry.close()
-
-cursor.execute("SHOW TABLES")
-print(cursor.fetchall())
+# qry = open('schema.sql', 'r')
+# cursor.execute(qry.read())
+# qry.close()
 
 def AddProblem(problemPath : str, problemName : str):
 	try:
@@ -40,21 +39,33 @@ def AddProblem(problemPath : str, problemName : str):
 
 		locations = tsp.Parse(f.read())
 		
+		cursor.execute(
+			f"""INSERT INTO Problem(Name, Comment, Size) 
+			VALUES ('{problemName}', 'Yeet machine', 1337)"""
+		)
+
 		for location in locations:
 			cursor.execute(
-				"""INSERT INTO Cities(Name, ID, x, y) VALUES (?, ?, ?, ?)""",
-				(problemName, location._id, location._x, location._y)
+				f"""INSERT INTO Cities(Name, ID, x, y) 
+				VALUES ('{problemName}', {location._id}, {location._xpos}, {location._ypos})"""
 			)
-
-		# cursor.execute(
-		# 	"INSERT INTO Problems(probName, problem) VALUES (?, ?)", \
-		# 	(problemName, f.read()) \
-		# )
 		f.close()
 		connection.commit()
 		return 'FILE ADDED SUCCESFULLY'
 	except IOError:
 		return 'FILE DOES NOT EXIST'
+
+def GetProblemInfo(problemName : str):
+	# problemName = f"'{problemName}'"
+	if DoesProblemExist(problemName):
+		#Construct problem
+		cursor.execute(f"SELECT * FROM Cities WHERE Name='{problemName}'")
+		cities = cursor.fetchall()
+
+		for city in cities:
+			print(f"{city['ID']} {city['x']} {city['y']}")
+	else:
+		print(f"PROBLEM '{problemName}' DOES NOT EXIST")
 
 def GetProblem(problemName : str):
 	problemName = f"'{problemName}'" #Surround with '
@@ -86,13 +97,17 @@ def GetSolution(problemName : str):
 	return Funcs.ParseEscapeChars((str(cursor.fetchone())[2:-3]))
 
 def DoesProblemExist(problemName : str):
-	problemName = f"'{problemName}'"
 	cursor.execute(
 		"SELECT COUNT(1) " \
 		"FROM Problem " \
-		f"WHERE Name = {problemName} " \
+		f"WHERE Name = '{problemName}'" \
 	)
-	return int(str(cursor.fetchone())[1:-2])
+
+	result = cursor.fetchall()
+	print(result[0])
+
+	# print(cursor.fetchone().)
+	return True
 
 def DoesSolutionExist(problemName : str):
 	#Disgusting boilerplate
