@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 
 # _plotter = Plotter()
 
-xArray = []
-yArray = []
+
 
 def PlotXY(x : float, y : float):
 	xArray.append(x)
@@ -12,10 +11,18 @@ def PlotXY(x : float, y : float):
 def ApplyPlot():
 	plt.plot(xArray, yArray, 'b-')
 	plt.plot(xArray, yArray, 'go')
+	xArray.clear()
+	yArray.clear()
 	# plt.show()
 
 def ClearPlot():
+	xArray.clear()
+	yArray.clear()
+	# plt.cla()
 	plt.clf() 
 
 def GetFigure():
 	return plt.gcf()
+
+xArray = []
+yArray = []

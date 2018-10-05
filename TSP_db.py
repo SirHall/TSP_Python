@@ -26,7 +26,7 @@ elif len(sys.argv) >= 4 and sys.argv[2] == 'SOLVE': #> python TSP_db.py problemN
 			)
 		DataBaseInterface.AddSolution(
 			problemName, \
-			Funcs.TourToText(solution), \
+			Funcs.TourToIDText(solution), \
 			Location.FindTourLength(solution), \
 			"Test algorithm" \
 		)

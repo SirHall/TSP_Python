@@ -8,10 +8,10 @@ class Location:
     _xpos = 0.0
     _ypos = 0.0
     
-    def __init__(self, ID, xPos, yPos ):
-        self._xpos = xPos
-        self._ypos = yPos
-        self._id = ID
+    def __init__(self, ID : int, xPos : float, yPos : float):
+        self._xpos = float(xPos)
+        self._ypos = float(yPos)
+        self._id = int(ID)
 
     def FindDistanceTo(self, otherLocation):
         return math.sqrt((otherLocation._xpos - self._xpos)**2 + (otherLocation._ypos - self._ypos)**2)

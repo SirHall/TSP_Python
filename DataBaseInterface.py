@@ -43,7 +43,7 @@ cursor = connection.cursor(pymysql.cursors.DictCursor)
 # cursor.execute(qry.read())
 # qry.close()
 
-def AddProblem(problemPath : str, problemName : str):
+def AddProblem(problemPath : str, problemName : str, comment : str = ''):
 	try:
 		f = open(problemPath)
 
@@ -51,7 +51,7 @@ def AddProblem(problemPath : str, problemName : str):
 		
 		cursor.execute(
 			f"""INSERT INTO Problem(Name, Comment, Size) 
-			VALUES ('{problemName}', '', {len(locations)})"""
+			VALUES ('{problemName}', '{comment}', {len(locations)})"""
 		)
 
 		for location in locations:
@@ -71,31 +71,23 @@ def GetProblem(problemName : str):
 		#Construct problem
 		cursor.execute(f"SELECT * FROM Cities WHERE Name='{problemName}'")
 		cities = cursor.fetchall()
-
-		strProblem = ""
+		locations = []
 		for city in cities:
-			strProblem += f"{city['ID']} {city['x']} {city['y']}\n"
-		return strProblem
+			locations.append(Location.Location(city['ID'], city['x'], city['y']))
+		return locations
 	else:
 		print(f"PROBLEM '{problemName}' DOES NOT EXIST")
+
+def GetAllProblems():
+	cursor.execute("SELECT * FROM Problem WHERE 1")
+	return cursor.fetchall()
 	
-# def GetProblem(problemName : str):
-# 	problemName = f"'{problemName}'" #Surround with '
-# 	cursor.execute(
-# 		f"SELECT problem FROM Problems WHERE probName={problemName}"
-# 	)
-# 	return Funcs.ParseEscapeChars((str(cursor.fetchone())[:-3][3:]))
 
 def AddSolution(problemName : str, solutionText : str, length : float, algorithm : str):
-	# cursor.execute(
-	# 	"INSERT INTO Solutions(solutionToID, solution, length) VALUES (?, ?, ?)", \
-	# 	(problemName, solutionText, length) \
-	# )
-
 	cursor.execute(
-		f"""INSERT INTO Solution(ProblemName, TourLength, Date, Author, Algorithm, Running Time, Tour)
-		VALUES ('{problemName}', {length}, {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, 's5133659', '{algorithm}', {time.process_time()}, '{solutionText}')
-		"""
+		f"""INSERT INTO Solution(ProblemName, TourLength, Date, Author, Algorithm, RunningTime, Tour)
+		VALUES ('{problemName}', {length}, STR_TO_DATE('{datetime.datetime.now().strftime("%Y-%m-%d")}', '%Y-%m-%d'), 
+		's5133659', '{algorithm}', {int(miscGlobal.start + time.process_time())}, '{solutionText}')"""
 	)
 
 	connection.commit()
@@ -116,6 +108,10 @@ def GetSolution(problemName : str):
 	else:
 		print(f"SOLUTION FOR {problemName} DOES NOT EXIST")
 		return ""
+
+def GetAllSolutions():
+	cursor.execute("SELECT * FROM Solution WHERE 1")
+	return cursor.fetchall()
 
 def DoesProblemExist(problemName : str):
 	cursor.execute(

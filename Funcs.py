@@ -19,6 +19,13 @@ def TourToText(tour : List[Location.Location]):
 	text += f"-1\t{tour[0]._xpos}\t{tour[0]._ypos}\n" #Add first 
 	return text
 
+def TourToIDText(tour : List[Location.Location]):
+	text = ""
+	for n in tour :
+		text += f"{n._id}, "
+	text += f"-1" #Add first 
+	return text
+
 def Isfloat(value):
 	try:
 		float(value)
