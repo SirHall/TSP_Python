@@ -1,6 +1,6 @@
 import sys
 import Location
-import glob
+import miscGlobal
 import Funcs
 import Opt2
 import SimAnnealing
@@ -17,7 +17,7 @@ import math
 #region Setup locations
 
 def SolveProblem(problemText : str, problemName : str, maxTime : float):
-	glob.maxTime = float(maxTime)
+	miscGlobal.maxTime = float(maxTime)
 
 	path = []
 
@@ -27,7 +27,7 @@ def SolveProblem(problemText : str, problemName : str, maxTime : float):
 	path = TwoOpt(path)
 	path = SimulatedAnnealing(path)
 
-	if glob.specialPrint == True:
+	if miscGlobal.specialPrint == True:
 		print('\nComputation time: ' + str(time.process_time()))
 		print('Total path length: ' + str(Location.FindTourLength(path)))
 	else:
@@ -51,9 +51,9 @@ def Parse(lines : str):
 		else:
 			#Atleast one character in this line are not contained within 'validLocationChars'
 			#This is not a location
-			if glob.specialPrint == True:
+			if miscGlobal.specialPrint == True:
 				print(line.strip()) #This might be useful information
-	if glob.specialPrint == True:
+	if miscGlobal.specialPrint == True:
 		print()
 	return locations
 
@@ -61,7 +61,7 @@ def NearestNeighbour(locations : List[Location.Location]):
 	path = []
 
 	#Greedy implementation
-	if glob.specialPrint == True:
+	if miscGlobal.specialPrint == True:
 		print('Greedy results:')
 	locationsLeft = locations.copy()
 	path.append(locationsLeft[0])
@@ -73,49 +73,49 @@ def NearestNeighbour(locations : List[Location.Location]):
 		closest = Location.FindClosestCity(path[len(path) - 1], locationsLeft)
 		path.append(closest)
 		locationsLeft.remove(closest)
-		if glob.specialPrint == True:
+		if miscGlobal.specialPrint == True:
 			Funcs.PrintProgressBar(len(path), len(locations))
-		if time.process_time() > glob.maxTime:
+		if time.process_time() > miscGlobal.maxTime:
 			path.extend(locationsLeft)
 			locationsLeft.clear()
-			if glob.specialPrint == True:
+			if miscGlobal.specialPrint == True:
 				print('\nCould not complete Nearest Neigbhour search')
-	if glob.specialPrint == True:
+	if miscGlobal.specialPrint == True:
 		print()
 		Funcs.PrintTour(path)
 	return path
 
 def TwoOpt(path : List[Location.Location]):
 	#2Opt
-	if glob.specialPrint == True:
+	if miscGlobal.specialPrint == True:
 		print('Opt2 Results:')
 	pathLenDiff = 10
 	pathLenDiffThreshold = 0.001
 	lastLength = Location.FindTourLength(path)
 	 #If the path_delta < 1, it's not worth calculating anymore
-	while pathLenDiff >= pathLenDiffThreshold and time.process_time() < glob.maxTime:
+	while pathLenDiff >= pathLenDiffThreshold and time.process_time() < miscGlobal.maxTime:
 		path = Opt2.Opt2(path)
 		newLength = Location.FindTourLength(path)
 		pathLenDiff = lastLength - newLength #Calculate this once
-		if glob.specialPrint == True:
+		if miscGlobal.specialPrint == True:
 			print('Made path shorter by: ' + str(lastLength - newLength))
 		lastLength = newLength
 
-	if glob.specialPrint == True:
+	if miscGlobal.specialPrint == True:
 		Funcs.PrintTour(path)
 	return path
 
 def SimulatedAnnealing(path : List[Location.Location]):
 	# Simulated annealing
-	if time.process_time() < glob.maxTime:
-		if glob.specialPrint == True:
+	if time.process_time() < miscGlobal.maxTime:
+		if miscGlobal.specialPrint == True:
 			print('Simulated annealing results:')
 		iterations = 1000000
 		initTemp = 1000000
 		targetTemp = 0.000000001
 		coolingRate = SimAnnealing.FindCoolingVal(iterations, initTemp, targetTemp)
 		path = SimAnnealing.SimulatedAnneal(path, temp = initTemp, targetTmp = targetTemp, maxIts = iterations, coolRate = coolingRate)
-		if glob.specialPrint == True:
+		if miscGlobal.specialPrint == True:
 			Funcs.PrintTour(path)
 	return path
 

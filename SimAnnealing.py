@@ -2,7 +2,7 @@ import Location
 import math
 import random
 import time
-import glob
+import miscGlobal
 import Funcs
 from typing import List
 
@@ -20,11 +20,11 @@ def SimulatedAnneal(tour : List[Location.Location], temp : float = 1000000.0, co
 	totalIts = 0
 
 	while temp > targetTmp and totalIts < maxIts:
-		if (100 / maxIts * totalIts) % 1 == 0 and glob.specialPrint == True: #Only write to console when needed
+		if (100 / maxIts * totalIts) % 1 == 0 and miscGlobal.specialPrint == True: #Only write to console when needed
 			Funcs.PrintProgressBar(totalIts, maxIts)
 			
-		if time.process_time() > glob.maxTime: #A little bit spaghetti 
-			if glob.specialPrint == True:
+		if time.process_time() > miscGlobal.maxTime: #A little bit spaghetti 
+			if miscGlobal.specialPrint == True:
 				print()
 			return bestTour
 		totalIts += 1
@@ -53,7 +53,7 @@ def SimulatedAnneal(tour : List[Location.Location], temp : float = 1000000.0, co
 		temp *= 1 - coolRate
 		# print(temp)
 	
-	if glob.specialPrint == True:
+	if miscGlobal.specialPrint == True:
 		Funcs.PrintProgressBar(100, 100)
 		print()
 	return bestTour

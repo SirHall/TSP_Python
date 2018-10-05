@@ -3,15 +3,14 @@ import sys
 import tsp
 import Funcs
 import Location
-import glob
+import miscGlobal
+import plotter
 
-glob.specialPrint = sys.argv.__contains__('-sp')
-if glob.specialPrint:
+miscGlobal.specialPrint = sys.argv.__contains__('-sp')
+if miscGlobal.specialPrint:
 	sys.argv.remove('-sp')
 
 problemName = sys.argv[1]
-
-DataBaseInterface.GetProblemInfo(sys.argv[1])
 
 if len(sys.argv) >= 4 and sys.argv[2] == 'ADD': #> python3 TSP_db.py problemName ADD problemDir.tsp
 	if not DataBaseInterface.DoesProblemExist(problemName): 
@@ -28,7 +27,8 @@ elif len(sys.argv) >= 4 and sys.argv[2] == 'SOLVE': #> python TSP_db.py problemN
 		DataBaseInterface.AddSolution(
 			problemName, \
 			Funcs.TourToText(solution), \
-			Location.FindTourLength(solution) \
+			Location.FindTourLength(solution), \
+			"Test algorithm" \
 		)
 	else:
 		print(f"Problem '{problemName}' does not exist")
@@ -42,8 +42,18 @@ elif len(sys.argv) >= 3 and sys.argv[2] == 'PROBLEMEXISTS':
 	print('TRUE' if DataBaseInterface.DoesProblemExist(problemName) else 'FALSE')	
 elif len(sys.argv) >= 3 and sys.argv[2] == 'SOLEXISTS':
 	print(f"{DataBaseInterface.DoesSolutionExist(problemName)} Solutions")
+elif len(sys.argv) >= 3 and sys.argv[2] == 'PLOTPROB':
+	if DataBaseInterface.DoesProblemExist(problemName):
+		locations = tsp.Parse(DataBaseInterface.GetProblem(problemName))
+		for location in locations:
+			plotter.PlotXY(location._xpos, location._ypos)
+		plotter.ShowPlot()
+	else:
+		print(f"PROBLEM {problemName} DOES NOT EXIST")
 elif len(sys.argv) >= 3:
 	print(f"INVALID ARGUMENT : {sys.argv[2]}") #Invalid argument
+
+
 
 DataBaseInterface.cursor.close();
 DataBaseInterface.connection.close();

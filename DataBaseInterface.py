@@ -4,15 +4,25 @@ import Funcs
 import Location
 import tsp
 import pymysql 
+import datetime
+import miscGlobal
+import time
 
 # dbPath = 'tspDataBase.db' 
 #mysql --user="s5133659" --password="FMLmxF5Y" --host="mysql.ict.griffith.edu.au" --database="s5133659db" --execute="SHOW TABLES"
+# connection = pymysql.connect(
+# 	host = 'mysql.ict.griffith.edu.au',
+# 	user = 's5133659',
+# 	password = 'FMLmxF5Y',
+# 	db = 's5133659db'
+# 	) #Disgusting hardcoded values
+
 connection = pymysql.connect(
-	host = 'mysql.ict.griffith.edu.au',
-	user = 's5133659',
-	password = 'FMLmxF5Y',
+	host = 'localhost',
+	user = 'root',
+	password = '',
 	db = 's5133659db'
-	) #Disgusting hardcoded values
+	)
 
 #Query results will be returned as a dictionary
 cursor = connection.cursor(pymysql.cursors.DictCursor) 
@@ -41,7 +51,7 @@ def AddProblem(problemPath : str, problemName : str):
 		
 		cursor.execute(
 			f"""INSERT INTO Problem(Name, Comment, Size) 
-			VALUES ('{problemName}', 'Yeet machine', 1337)"""
+			VALUES ('{problemName}', '', {len(locations)})"""
 		)
 
 		for location in locations:
@@ -55,46 +65,57 @@ def AddProblem(problemPath : str, problemName : str):
 	except IOError:
 		return 'FILE DOES NOT EXIST'
 
-def GetProblemInfo(problemName : str):
+def GetProblem(problemName : str):
 	# problemName = f"'{problemName}'"
 	if DoesProblemExist(problemName):
 		#Construct problem
 		cursor.execute(f"SELECT * FROM Cities WHERE Name='{problemName}'")
 		cities = cursor.fetchall()
 
+		strProblem = ""
 		for city in cities:
-			print(f"{city['ID']} {city['x']} {city['y']}")
+			strProblem += f"{city['ID']} {city['x']} {city['y']}\n"
+		return strProblem
 	else:
 		print(f"PROBLEM '{problemName}' DOES NOT EXIST")
+	
+# def GetProblem(problemName : str):
+# 	problemName = f"'{problemName}'" #Surround with '
+# 	cursor.execute(
+# 		f"SELECT problem FROM Problems WHERE probName={problemName}"
+# 	)
+# 	return Funcs.ParseEscapeChars((str(cursor.fetchone())[:-3][3:]))
 
-def GetProblem(problemName : str):
-	problemName = f"'{problemName}'" #Surround with '
-	cursor.execute(
-		f"SELECT problem FROM Problems WHERE probName={problemName}"
-	)
-	return Funcs.ParseEscapeChars((str(cursor.fetchone())[:-3][3:]))
+def AddSolution(problemName : str, solutionText : str, length : float, algorithm : str):
+	# cursor.execute(
+	# 	"INSERT INTO Solutions(solutionToID, solution, length) VALUES (?, ?, ?)", \
+	# 	(problemName, solutionText, length) \
+	# )
 
-def AddSolution(problemName : str, solutionText : str, length : float):
 	cursor.execute(
-		"INSERT INTO Solutions(solutionToID, solution, length) VALUES (?, ?, ?)", \
-		(problemName, solutionText, length) \
+		f"""INSERT INTO Solution(ProblemName, TourLength, Date, Author, Algorithm, Running Time, Tour)
+		VALUES ('{problemName}', {length}, {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, 's5133659', '{algorithm}', {time.process_time()}, '{solutionText}')
+		"""
 	)
+
 	connection.commit()
 
 def GetSolution(problemName : str):
 	#Get shortest solution stored for this path
-	problemName = f"'{problemName}'" #Surround with '
-	# cursor.execute(
-	# 	f"SELECT problem FROM Problems WHERE probName={problemName}"
-	# )
-	cursor.execute(
-		"SELECT a.solution " \
-		"FROM Solutions a " \
-		"LEFT OUTER JOIN Solutions b " \
-    	"	ON a.solutionToID = b.solutionToID AND a.length < b.length " \
-		"WHERE b.solutionToID IS NULL" \
-	)
-	return Funcs.ParseEscapeChars((str(cursor.fetchone())[2:-3]))
+	if DoesSolutionExist(problemName):
+		problemName = f"'{problemName}'" #Surround with '
+		cursor.execute(
+			"SELECT a.Tour " \
+			"FROM Solution a " \
+			"LEFT OUTER JOIN Solution b " \
+			"	ON a.ProblemName = b.ProblemName AND a.TourLength < b.TourLength " \
+			"WHERE b.ProblemName IS NULL" \
+		)
+		print(cursor.fetchone())
+		# return Funcs.ParseEscapeChars((str(cursor.fetchone())[2:-3]))
+	else:
+		print(f"SOLUTION FOR {problemName} DOES NOT EXIST")
+		return ""
 
 def DoesProblemExist(problemName : str):
 	cursor.execute(
@@ -102,19 +123,14 @@ def DoesProblemExist(problemName : str):
 		"FROM Problem " \
 		f"WHERE Name = '{problemName}'" \
 	)
-
 	result = cursor.fetchall()
-	print(result[0])
-
-	# print(cursor.fetchone().)
-	return True
+	return int(str(result[0])[-2:-1]) == 1 
 
 def DoesSolutionExist(problemName : str):
 	#Disgusting boilerplate
-	problemName = f"'{problemName}'"
 	cursor.execute(
 		"SELECT COUNT(1) " \
 		"FROM Solution " \
-		f"WHERE ProblemName = {problemName} " \
+		f"WHERE ProblemName = '{problemName}'" \
 	)
-	return int(str(cursor.fetchone())[1:-2])
+	return str(cursor.fetchall()[0])[-2:-1] == 1 

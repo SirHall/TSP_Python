@@ -1,7 +1,7 @@
 import Location
 import time
 import Funcs
-import glob
+import miscGlobal
 from typing import List
 
 
@@ -19,11 +19,11 @@ def Opt2(tour : List[Location.Location]):
     ij = len(tour)**2
     while(i < len(tour)):
         j = i + 1
-        if glob.specialPrint == True:
+        if miscGlobal.specialPrint == True:
             Funcs.PrintProgressBar(i * j, ij)
         while(j < len(tour)):
-            if time.process_time() > glob.maxTime: #A little bit spaghetti 
-                if glob.specialPrint == True:
+            if time.process_time() > miscGlobal.maxTime: #A little bit spaghetti 
+                if miscGlobal.specialPrint == True:
                     print()
                 return oldTour
             newTour = oldTour.copy()
@@ -37,7 +37,7 @@ def Opt2(tour : List[Location.Location]):
                 # print("\tNew shorter dist: " + str(shortestDist))
             j += 1
         i += 1
-    if glob.specialPrint == True:
+    if miscGlobal.specialPrint == True:
         Funcs.PrintProgressBar(100, 100)
         print()
     return oldTour
