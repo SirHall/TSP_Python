@@ -23,6 +23,11 @@ connection = pymysql.connect(
 # 	user = 'root',
 # 	password = '',
 # 	db = 's5133659db'
+# 	)tion = pymysql.connect(
+# 	host = 'localhost',
+# 	user = 'root',
+# 	password = '',
+# 	db = 's5133659db'
 # 	)
 
 #Query results will be returned as a dictionary
