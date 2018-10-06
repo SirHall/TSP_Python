@@ -28,7 +28,7 @@ def SolveProblem(problemText : str, problemName : str, maxTime : float):
 	path = SimulatedAnnealing(path)
 
 	if miscGlobal.specialPrint == True:
-		print('\nComputation time: ' + str(time.process_time()))
+		print('\nComputation time: ' + str(time.process_time() - miscGlobal.start))
 		print('Total path length: ' + str(Location.FindTourLength(path)))
 	else:
 		Funcs.PrintData(problemName, Location.FindTourLength(path), path)
@@ -75,11 +75,12 @@ def NearestNeighbour(locations : List[Location.Location]):
 		locationsLeft.remove(closest)
 		if miscGlobal.specialPrint == True:
 			Funcs.PrintProgressBar(len(path), len(locations))
-		if time.process_time() > miscGlobal.maxTime:
+		if (time.process_time() - miscGlobal.start) > miscGlobal.maxTime:
 			path.extend(locationsLeft)
 			locationsLeft.clear()
 			if miscGlobal.specialPrint == True:
 				print('\nCould not complete Nearest Neigbhour search')
+		yield path
 	if miscGlobal.specialPrint == True:
 		print()
 		Funcs.PrintTour(path)
@@ -93,7 +94,7 @@ def TwoOpt(path : List[Location.Location]):
 	pathLenDiffThreshold = 0.001
 	lastLength = Location.FindTourLength(path)
 	 #If the path_delta < 1, it's not worth calculating anymore
-	while pathLenDiff >= pathLenDiffThreshold and time.process_time() < miscGlobal.maxTime:
+	while pathLenDiff >= pathLenDiffThreshold and (time.process_time() - miscGlobal.start) < miscGlobal.maxTime:
 		path = Opt2.Opt2(path)
 		newLength = Location.FindTourLength(path)
 		pathLenDiff = lastLength - newLength #Calculate this once
@@ -107,7 +108,7 @@ def TwoOpt(path : List[Location.Location]):
 
 def SimulatedAnnealing(path : List[Location.Location]):
 	# Simulated annealing
-	if time.process_time() < miscGlobal.maxTime:
+	if (time.process_time() - miscGlobal.start) < miscGlobal.maxTime:
 		if miscGlobal.specialPrint == True:
 			print('Simulated annealing results:')
 		iterations = 1000000

@@ -23,7 +23,7 @@ def SimulatedAnneal(tour : List[Location.Location], temp : float = 1000000.0, co
 		if (100 / maxIts * totalIts) % 1 == 0 and miscGlobal.specialPrint == True: #Only write to console when needed
 			Funcs.PrintProgressBar(totalIts, maxIts)
 			
-		if time.process_time() > miscGlobal.maxTime: #A little bit spaghetti 
+		if (time.process_time() - miscGlobal.start) > miscGlobal.maxTime: #A little bit spaghetti 
 			if miscGlobal.specialPrint == True:
 				print()
 			return bestTour

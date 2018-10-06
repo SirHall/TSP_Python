@@ -1,20 +1,18 @@
-import wx
-import wx.lib.agw.aui
-import wx.lib.mixins.inspection
-
-import matplotlib
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg
-import random
-
-import plotter
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
+import wx.lib.mixins.inspection
 import DataBaseInterface
-import miscGlobal
 from typing import List
+import wx.lib.agw.aui
+import matplotlib
+import miscGlobal
 import Location
-
-tour = []
-
+import plotter
+import random
+import Funcs
+import time
+import tsp
+import wx
 
 def SetupFrameUI():
 	menuBar = wx.MenuBar()
@@ -31,6 +29,7 @@ def SetupFrameUI():
 	solveButton = wx.Menu()
 	showProblemsItem = solveButton.Append(wx.ID_ANY, 'Show problems in DB', 'Getting problems')
 	showSolutionsItem = solveButton.Append(wx.ID_ANY, 'Show solutions in DB', 'Getting solution')
+	solveLoadedItem = solveButton.Append(wx.ID_ANY, 'Solve loaded tour', 'Solving tour')
 
 	menuBar.Append(solveButton, 'Solve')
 	
@@ -51,7 +50,7 @@ def SetupFrameUI():
 	frame.Bind(wx.EVT_MENU, ChooseOpt2, opt2Item)
 	frame.Bind(wx.EVT_MENU, ChooseSimulatedAnnealing, simulatedAnnealingItem)
 	frame.Bind(wx.EVT_MENU, LoadProblem, loadProblemItem)
-	
+	frame.Bind(wx.EVT_MENU, SolveLoadedPath, solveLoadedItem)
 
 def GetStrInput(message : str, title : str = ''):
 	dialog = wx.TextEntryDialog(frame, message, title)
@@ -101,10 +100,22 @@ def ChooseOpt2(any):
 def ChooseSimulatedAnnealing(any):
 	SetAlgorithm(miscGlobal.AlgorithmChoice.SimulatedAnnealing)
 
+def SolveLoadedPath(self):
+	timeStr =  'Something that won\'t format'
+	while not Funcs.Isfloat(timeStr):
+		timeStr = GetStrInput("Max computation time: ")
+	miscGlobal.start = time.process_time()
+	miscGlobal.maxTime = float(timeStr)
+	
+	if miscGlobal.algorithmChoice == miscGlobal.AlgorithmChoice.NearestNeigbour:
+		for stepPath in tsp.NearestNeighbour(miscGlobal.tour):
+			miscGlobal.tour = stepPath
+			PlotTour()
+
 #Loads a problem from the database and sets it as the current tour
 def LoadProblem(self):
-	PlotTour(self, DataBaseInterface.GetProblem(GetStrInput("Problem name: ")))
-
+	miscGlobal.tour = DataBaseInterface.GetProblem(GetStrInput("Problem name: "))
+	PlotTour()
 
 def SetAlgorithm(choice : miscGlobal.AlgorithmChoice):
 	miscGlobal.algorithmChoice = choice
@@ -116,48 +127,74 @@ def AddFigure(figure : matplotlib.figure.Figure):
 	frame.toolbar.Realize() #Damn, I just realised!
 
 	frame.sizer = wx.BoxSizer(wx.VERTICAL)
-	frame.sizer.Add(frame.canvas, 1, wx.EXPAND)
+	frame.sizedCanvas = frame.sizer.Add(frame.canvas, 1, wx.EXPAND)
 	frame.sizer.Add(frame.toolbar, 0, wx.LEFT | wx.EXPAND)
 	panel.SetSizer(frame.sizer)
 
+def Update():
+	panel.Refresh()
+	panel.Update()
+
+	winSize = frame.GetSize();
+	winSize.DecBy(1)
+	frame.SetSize(winSize)
+	winSize.IncBy(1)
+	frame.SetSize(winSize)
+	# frame.SendSizeEvent()
+	pass
+	# frame.Update()
+	# frame.sizedCanvas
+	
+	# frame.sizer.Update()
+
+
 def UpdateFigure(figure : matplotlib.figure.Figure):
-	frame.canvas = None
-	frame.toolbar = None
-	frame.sizer = None
-	panel.SetSizer(None)
-	AddFigure(figure)
-	frame.Update()
+	# frame.canvas = None
+	# frame.toolbar = None
+	# frame.sizer = None
+	# # panel.SetSizer(None)
+	# panel.Sizer.Clear(True)
+
+	# frame.canvas = FigureCanvasWxAgg(panel, -1, figure)
+	# frame.toolbar = NavigationToolbar2WxAgg(frame.canvas)
+
+	# frame.toolbar.Realize() #Damn, I just realised!
+
+	# frame.sizedCanvas = frame.sizer.Add(frame.canvas, 1, wx.EXPAND)
+	# frame.sizer.Add(frame.toolbar, 0, wx.LEFT | wx.EXPAND)
+	# panel.SetSizer(frame.sizer)
+
+	# AddFigure(figure)
+	# panel.GetSizer().GetChildren().Remove(frame.sizedCanvas)
+	# panel.
+	pass
 
 def ShowWindow():
 	frame.Show()
 	app.MainLoop()
+	
 
 def ShowPlot():
 	AddFigure(plotter.GetFigure())
 
-def PlotTour(self, path : List[Location.Location]):
-	self.tour = path
+def PlotTour():
 	plotter.ClearPlot()
-	for location in self.tour:
-		print(f"({location._xpos}, {location._ypos})")
+	for location in miscGlobal.tour:
 		plotter.PlotXY(location._xpos, location._ypos)
 	plotter.ApplyPlot()
-	UpdateFigure(plotter.GetFigure())
+	Update()
+	# UpdateFigure(plotter.GetFigure())
+
+
 
 #Setup basic window
 app = wx.lib.mixins.inspection.InspectableApp()
-frame = wx.Frame(None, 0, 'TSP Solver v3000™', \
+frame = wx.Frame(None, -1, 'TSP Solver v3000™', \
 	style = wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.RESIZE_BORDER | wx.CLOSE_BOX | wx.CAPTION | wx.MINIMIZE_BOX)
-panel = wx.Panel(frame, id = 0)
+panel = wx.Panel(frame, id = -1)
 frame.CenterOnScreen()
 frame.canvas = FigureCanvasWxAgg(panel, -1, plotter.GetFigure())
 SetupFrameUI()
-
-#Try basic plot
-# plotter.PlotXY(1, 2)
-# plotter.PlotXY(2, 3)
-# plotter.PlotXY(3, 4)
-
 
 for k in range(0, 1):
 	plotter.ClearPlot()

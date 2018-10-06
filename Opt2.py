@@ -22,7 +22,7 @@ def Opt2(tour : List[Location.Location]):
         if miscGlobal.specialPrint == True:
             Funcs.PrintProgressBar(i * j, ij)
         while(j < len(tour)):
-            if time.process_time() > miscGlobal.maxTime: #A little bit spaghetti 
+            if (time.process_time() - miscGlobal.start) > miscGlobal.maxTime: #A little bit spaghetti 
                 if miscGlobal.specialPrint == True:
                     print()
                 return oldTour

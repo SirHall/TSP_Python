@@ -47,7 +47,7 @@ elif len(sys.argv) >= 3 and sys.argv[2] == 'PLOTPROB':
 		locations = tsp.Parse(DataBaseInterface.GetProblem(problemName))
 		for location in locations:
 			plotter.PlotXY(location._xpos, location._ypos)
-		plotter.ShowPlot()
+		# plotter.ShowPlot()
 	else:
 		print(f"PROBLEM {problemName} DOES NOT EXIST")
 elif len(sys.argv) >= 3:
