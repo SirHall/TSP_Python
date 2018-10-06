@@ -11,19 +11,19 @@ from typing import List
 
 # dbPath = 'tspDataBase.db' 
 #mysql --user="s5133659" --password="FMLmxF5Y" --host="mysql.ict.griffith.edu.au" --database="s5133659db" --execute="SHOW TABLES"
-# connection = pymysql.connect(
-# 	host = 'mysql.ict.griffith.edu.au',
-# 	user = 's5133659',
-# 	password = 'FMLmxF5Y',
-# 	db = 's5133659db'
-# 	) #Disgusting hardcoded values
-
 connection = pymysql.connect(
-	host = 'localhost',
-	user = 'root',
-	password = '',
+	host = 'mysql.ict.griffith.edu.au',
+	user = 's5133659',
+	password = 'FMLmxF5Y',
 	db = 's5133659db'
-	)
+	) #Disgusting hardcoded values
+
+# connection = pymysql.connect(
+# 	host = 'localhost',
+# 	user = 'root',
+# 	password = '',
+# 	db = 's5133659db'
+# 	)
 
 #Query results will be returned as a dictionary
 cursor = connection.cursor(pymysql.cursors.DictCursor) 
@@ -112,7 +112,7 @@ def GetSolution(problemName : str):
 		cursor.execute(
 			f"""SELECT * FROM Cities WHERE Name = '{problemName}'"""
 		)
-		
+
 		cities = cursor.fetchall()
 		
 		#Construct the path
