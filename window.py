@@ -3,12 +3,14 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 import wx.lib.mixins.inspection
 import DataBaseInterface
 from typing import List
+from time import sleep
 import wx.lib.agw.aui
 import matplotlib
 import miscGlobal
 import Location
 import plotter
 import random
+import _thread
 import Funcs
 import time
 import tsp
@@ -22,6 +24,7 @@ def SetupFrameUI():
 	exitItem = fileButton.Append(wx.ID_EXIT, 'Exit', 'Close program')
 	addToDBItem = fileButton.Append(wx.ID_ANY, 'Add to database', 'Adding to database')
 	loadProblemItem = fileButton.Append(wx.ID_ANY, 'Load problem', 'Loading problem')
+	saveToSolutionItem = fileButton.Append(wx.ID_ANY, 'Save to solution', 'Saving solution')
 
 	menuBar.Append(fileButton, 'File')
 	
@@ -50,7 +53,8 @@ def SetupFrameUI():
 	frame.Bind(wx.EVT_MENU, ChooseOpt2, opt2Item)
 	frame.Bind(wx.EVT_MENU, ChooseSimulatedAnnealing, simulatedAnnealingItem)
 	frame.Bind(wx.EVT_MENU, LoadProblem, loadProblemItem)
-	frame.Bind(wx.EVT_MENU, SolveLoadedPath, solveLoadedItem)
+	frame.Bind(wx.EVT_MENU, StartSolveThread, solveLoadedItem)
+	frame.Bind(wx.EVT_MENU, SaveToSolution, saveToSolutionItem)
 
 def GetStrInput(message : str, title : str = ''):
 	dialog = wx.TextEntryDialog(frame, message, title)
@@ -100,13 +104,19 @@ def ChooseOpt2(any):
 def ChooseSimulatedAnnealing(any):
 	SetAlgorithm(miscGlobal.AlgorithmChoice.SimulatedAnnealing)
 
-def SolveLoadedPath(self):
+def StartSolveThread(any):
 	timeStr =  'Something that won\'t format'
 	while not Funcs.Isfloat(timeStr):
 		timeStr = GetStrInput("Max computation time: ")
 	miscGlobal.start = time.process_time()
 	miscGlobal.maxTime = float(timeStr)
 	
+	# try:
+	_thread.start_new_thread(SolveLoadedPath, ("", ""))
+	# except:
+	# 	print("Unable to start thread")
+
+def SolveLoadedPath(any, any2):
 	if miscGlobal.algorithmChoice == miscGlobal.AlgorithmChoice.NearestNeigbour:
 		for stepPath in tsp.NearestNeighbour(miscGlobal.tour):
 			miscGlobal.tour = stepPath
@@ -114,8 +124,19 @@ def SolveLoadedPath(self):
 
 #Loads a problem from the database and sets it as the current tour
 def LoadProblem(self):
-	miscGlobal.tour = DataBaseInterface.GetProblem(GetStrInput("Problem name: "))
-	PlotTour()
+	tourName = GetStrInput("Problem name: ")
+	if DataBaseInterface.DoesProblemExist(tourName):
+		miscGlobal.name = tourName
+		miscGlobal.tour = DataBaseInterface.GetProblem(tourName)
+		PlotTour()
+	else:
+		ErrorBox(f"Problem '{tourName}' does not exist")
+
+def SaveToSolution(any):
+	DataBaseInterface.AddSolution(miscGlobal.name, Funcs.TourToIDText(miscGlobal.tour), \
+	Location.FindTourLength(miscGlobal.tour), miscGlobal.algorithmChoice.name)
+
+
 
 def SetAlgorithm(choice : miscGlobal.AlgorithmChoice):
 	miscGlobal.algorithmChoice = choice
@@ -132,14 +153,17 @@ def AddFigure(figure : matplotlib.figure.Figure):
 	panel.SetSizer(frame.sizer)
 
 def Update():
-	panel.Refresh()
-	panel.Update()
+
+	# panel.Refresh()
+	# panel.Update()
 
 	winSize = frame.GetSize();
 	winSize.DecBy(1)
 	frame.SetSize(winSize)
 	winSize.IncBy(1)
 	frame.SetSize(winSize)
+	sleep(0.001) #Prevent the window from not responding
+
 	# frame.SendSizeEvent()
 	pass
 	# frame.Update()
@@ -182,6 +206,7 @@ def PlotTour():
 	for location in miscGlobal.tour:
 		plotter.PlotXY(location._xpos, location._ypos)
 	plotter.ApplyPlot()
+	frame.canvas = None
 	Update()
 	# UpdateFigure(plotter.GetFigure())
 
@@ -190,17 +215,11 @@ def PlotTour():
 #Setup basic window
 app = wx.lib.mixins.inspection.InspectableApp()
 frame = wx.Frame(None, -1, 'TSP Solver v3000™', \
-	style = wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.RESIZE_BORDER | wx.CLOSE_BOX | wx.CAPTION | wx.MINIMIZE_BOX)
+	style = wx.SYSTEM_MENU | wx.RESIZE_BORDER | wx.CLOSE_BOX | wx.CAPTION | wx.MINIMIZE_BOX)
 panel = wx.Panel(frame, id = -1)
 frame.CenterOnScreen()
 frame.canvas = FigureCanvasWxAgg(panel, -1, plotter.GetFigure())
 SetupFrameUI()
-
-for k in range(0, 1):
-	plotter.ClearPlot()
-	for i in range(0, 10):
-		plotter.PlotXY(i, random.randint(0, 10))
-	plotter.ApplyPlot()
 
 	#Show window
 ShowPlot()

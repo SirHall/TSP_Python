@@ -13,3 +13,4 @@ maxTime = 100
 specialPrint = False
 algorithmChoice = AlgorithmChoice.NearestNeigbour
 tour = List[Location.Location]
+name = ""
