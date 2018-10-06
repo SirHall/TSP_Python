@@ -95,12 +95,15 @@ def TwoOpt(path : List[Location.Location]):
 	lastLength = Location.FindTourLength(path)
 	 #If the path_delta < 1, it's not worth calculating anymore
 	while pathLenDiff >= pathLenDiffThreshold and (time.process_time() - miscGlobal.start) < miscGlobal.maxTime:
-		path = Opt2.Opt2(path)
+		for newPath in Opt2.Opt2(path):
+			yield newPath
+			path = newPath
 		newLength = Location.FindTourLength(path)
 		pathLenDiff = lastLength - newLength #Calculate this once
 		if miscGlobal.specialPrint == True:
 			print('Made path shorter by: ' + str(lastLength - newLength))
 		lastLength = newLength
+			
 
 	if miscGlobal.specialPrint == True:
 		Funcs.PrintTour(path)
@@ -115,7 +118,9 @@ def SimulatedAnnealing(path : List[Location.Location]):
 		initTemp = 1000000
 		targetTemp = 0.000000001
 		coolingRate = SimAnnealing.FindCoolingVal(iterations, initTemp, targetTemp)
-		path = SimAnnealing.SimulatedAnneal(path, temp = initTemp, targetTmp = targetTemp, maxIts = iterations, coolRate = coolingRate)
+		for stepPath in SimAnnealing.SimulatedAnneal(path, temp = initTemp, targetTmp = targetTemp, maxIts = iterations, coolRate = coolingRate):
+			path = stepPath
+			yield stepPath
 		if miscGlobal.specialPrint == True:
 			Funcs.PrintTour(path)
 	return path

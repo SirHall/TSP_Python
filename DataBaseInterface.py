@@ -7,6 +7,7 @@ import pymysql
 import datetime
 import miscGlobal
 import time
+from typing import List
 
 # dbPath = 'tspDataBase.db' 
 #mysql --user="s5133659" --password="FMLmxF5Y" --host="mysql.ict.griffith.edu.au" --database="s5133659db" --execute="SHOW TABLES"
@@ -94,17 +95,34 @@ def AddSolution(problemName : str, solutionText : str, length : float, algorithm
 
 def GetSolution(problemName : str):
 	#Get shortest solution stored for this path
+	print(problemName)
 	if DoesSolutionExist(problemName):
-		problemName = f"'{problemName}'" #Surround with '
 		cursor.execute(
 			"SELECT a.Tour " \
 			"FROM Solution a " \
 			"LEFT OUTER JOIN Solution b " \
-			"	ON a.ProblemName = b.ProblemName AND a.TourLength < b.TourLength " \
-			"WHERE b.ProblemName IS NULL" \
+			"ON a.ProblemName = b.ProblemName AND a.TourLength < b.TourLength " \
+			f"WHERE a.ProblemName = '{problemName}'" \
 		)
-		print(cursor.fetchone())
-		# return Funcs.ParseEscapeChars((str(cursor.fetchone())[2:-3]))
+		shortestSolution = cursor.fetchone()['Tour'].replace(",", "").replace("-1", "").split()
+		print('Shortest path')
+		print(shortestSolution)
+
+		#Get all the cities that match up to this tour
+		cursor.execute(
+			f"""SELECT * FROM Cities WHERE Name = '{problemName}'"""
+		)
+		
+		cities = cursor.fetchall()
+		
+		#Construct the path
+		path = []
+		for ID in shortestSolution:
+			for city in cities:
+				if int(city['ID']) == int(ID):
+					path.append(Location.Location(city['ID'], city['x'], city['y']))
+		return path
+
 	else:
 		print(f"SOLUTION FOR {problemName} DOES NOT EXIST")
 		return ""
@@ -120,7 +138,7 @@ def DoesProblemExist(problemName : str):
 		f"WHERE Name = '{problemName}'" \
 	)
 	result = cursor.fetchall()
-	return int(str(result[0])[-2:-1]) == 1 
+	return int(str(result[0])[-2:-1]) >= 1 
 
 def DoesSolutionExist(problemName : str):
 	#Disgusting boilerplate
@@ -129,4 +147,6 @@ def DoesSolutionExist(problemName : str):
 		"FROM Solution " \
 		f"WHERE ProblemName = '{problemName}'" \
 	)
-	return str(cursor.fetchall()[0])[-2:-1] == 1 
+	result = cursor.fetchall()
+	# print(result)
+	return int(str(result[0])[-2:-1]) >= 1 

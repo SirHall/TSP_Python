@@ -47,6 +47,7 @@ def SimulatedAnneal(tour : List[Location.Location], temp : float = 1000000.0, co
 		if newDist < bestDist:
 			bestTour = newTour
 			bestDist = newDist
+			yield newTour
 
 		tourIndex1 = tourIndex2 #Makes them both equal so they will be recalculated
 		

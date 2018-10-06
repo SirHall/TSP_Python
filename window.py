@@ -25,6 +25,7 @@ def SetupFrameUI():
 	addToDBItem = fileButton.Append(wx.ID_ANY, 'Add to database', 'Adding to database')
 	loadProblemItem = fileButton.Append(wx.ID_ANY, 'Load problem', 'Loading problem')
 	saveToSolutionItem = fileButton.Append(wx.ID_ANY, 'Save to solution', 'Saving solution')
+	loadSolutionItem = fileButton.Append(wx.ID_ANY, 'Load best solution', 'Loading solution')
 
 	menuBar.Append(fileButton, 'File')
 	
@@ -55,6 +56,7 @@ def SetupFrameUI():
 	frame.Bind(wx.EVT_MENU, LoadProblem, loadProblemItem)
 	frame.Bind(wx.EVT_MENU, StartSolveThread, solveLoadedItem)
 	frame.Bind(wx.EVT_MENU, SaveToSolution, saveToSolutionItem)
+	frame.Bind(wx.EVT_MENU, LoadSolution, loadSolutionItem)
 
 def GetStrInput(message : str, title : str = ''):
 	dialog = wx.TextEntryDialog(frame, message, title)
@@ -121,6 +123,15 @@ def SolveLoadedPath(any, any2):
 		for stepPath in tsp.NearestNeighbour(miscGlobal.tour):
 			miscGlobal.tour = stepPath
 			PlotTour()
+	elif miscGlobal.algorithmChoice == miscGlobal.AlgorithmChoice.Opt2:
+		for stepPath in tsp.TwoOpt(miscGlobal.tour):
+			miscGlobal.tour = stepPath
+			PlotTour()
+	elif miscGlobal.algorithmChoice == miscGlobal.AlgorithmChoice.SimulatedAnnealing:
+		for stepPath in tsp.SimulatedAnnealing(miscGlobal.tour):
+			miscGlobal.tour = stepPath
+			PlotTour()
+	MessageBox(f"Finished solving with a time of: {time.process_time() - miscGlobal.start}")
 
 #Loads a problem from the database and sets it as the current tour
 def LoadProblem(self):
@@ -136,6 +147,14 @@ def SaveToSolution(any):
 	DataBaseInterface.AddSolution(miscGlobal.name, Funcs.TourToIDText(miscGlobal.tour), \
 	Location.FindTourLength(miscGlobal.tour), miscGlobal.algorithmChoice.name)
 
+def LoadSolution(any):
+	tourName = GetStrInput("Problem name: ")
+	if DataBaseInterface.DoesSolutionExist(tourName):
+		miscGlobal.name = tourName
+		miscGlobal.tour = DataBaseInterface.GetSolution(tourName)
+		PlotTour()
+	else:
+		ErrorBox(f"Solution for '{tourName}' does not exist")
 
 
 def SetAlgorithm(choice : miscGlobal.AlgorithmChoice):

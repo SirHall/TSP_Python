@@ -34,6 +34,7 @@ def Opt2(tour : List[Location.Location]):
             if(newDist < shortestDist):
                 oldTour = newTour
                 shortestDist = newDist
+                yield oldTour
                 # print("\tNew shorter dist: " + str(shortestDist))
             j += 1
         i += 1
